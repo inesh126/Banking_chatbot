@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking Chatbot</title>
+    <style>
+        :root {
+            --bg: #f4efe6;
+            --panel: #fffaf2;
+            --panel-strong: #f0e3cf;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --accent: #0f766e;
+            --accent-strong: #115e59;
+            --accent-soft: #cdeee6;
+            --border: #d6c7af;
+            --user: #1d4ed8;
+            --bot: #7c2d12;
+            --shadow: 0 18px 40px rgba(73, 52, 24, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Georgia, "Times New Roman", serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(15, 118, 110, 0.14), transparent 30%),
+                radial-gradient(circle at top right, rgba(180, 83, 9, 0.12), transparent 24%),
+                linear-gradient(180deg, #f8f2e8 0%, #efe6d8 100%);
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        .app-shell {
+            width: min(980px, 100%);
+            min-height: 82vh;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            background: rgba(255, 250, 242, 0.9);
+            border: 1px solid rgba(214, 199, 175, 0.9);
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+
+        .sidebar {
+            padding: 28px 24px;
+            background:
+                linear-gradient(160deg, rgba(15, 118, 110, 0.92), rgba(17, 94, 89, 0.86)),
+                var(--accent);
+            color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .eyebrow {
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+            font-size: 0.72rem;
+            opacity: 0.75;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(2rem, 4vw, 3rem);
+            line-height: 0.95;
+            font-weight: 700;
+        }
+
+        .lead {
+            margin: 0;
+            line-height: 1.6;
+            color: rgba(248, 250, 252, 0.82);
+        }
+
+        .prompt-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .prompt-card {
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 14px;
+            cursor: pointer;
+            transition: transform 160ms ease, background 160ms ease;
+        }
+
+        .prompt-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .prompt-card strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+        }
+
+        .main {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            min-height: 82vh;
+        }
+
+        .header {
+            padding: 24px 28px 18px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 252, 247, 0.86);
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent-strong);
+            font-size: 0.92rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 0 6px rgba(15, 118, 110, 0.12);
+        }
+
+        .conversation {
+            padding: 24px 28px;
+            overflow: auto;
+            display: grid;
+            gap: 16px;
+            align-content: start;
+            background:
+                linear-gradient(180deg, rgba(255, 252, 247, 0.88), rgba(250, 243, 232, 0.9));
+        }
+
+        .message {
+            max-width: min(760px, 92%);
+            padding: 16px 18px;
+            border-radius: 20px;
+            animation: fade-up 220ms ease;
+        }
+
+        .message.user {
+            justify-self: end;
+            background: linear-gradient(180deg, #2563eb, #1d4ed8);
+            color: white;
+            border-bottom-right-radius: 6px;
+        }
+
+        .message.bot {
+            justify-self: start;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 6px;
+        }
+
+        .message.system {
+            justify-self: center;
+            background: rgba(124, 45, 18, 0.08);
+            border: 1px dashed rgba(124, 45, 18, 0.24);
+            color: var(--bot);
+        }
+
+        .meta {
+            margin-bottom: 10px;
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .user .meta {
+            color: rgba(255, 255, 255, 0.72);
+        }
+
+        .content {
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .data-card {
+            margin-top: 14px;
+            padding: 14px;
+            border-radius: 16px;
+            background: var(--panel-strong);
+            overflow: auto;
+        }
+
+        .data-card pre {
+            margin: 0;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            font-family: Consolas, "Courier New", monospace;
+        }
+
+        .composer {
+            border-top: 1px solid var(--border);
+            padding: 20px 24px 24px;
+            background: rgba(255, 250, 242, 0.96);
+        }
+
+        .composer form {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 14px;
+        }
+
+        .composer textarea {
+            width: 100%;
+            min-height: 72px;
+            max-height: 200px;
+            resize: vertical;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 16px 18px;
+            font: inherit;
+            color: var(--text);
+            background: #fffdf9;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75);
+        }
+
+        .composer textarea:focus {
+            outline: 2px solid rgba(15, 118, 110, 0.22);
+            border-color: var(--accent);
+        }
+
+        .composer button {
+            align-self: end;
+            border: 0;
+            border-radius: 18px;
+            padding: 16px 20px;
+            min-width: 140px;
+            background: linear-gradient(180deg, #0f766e, #115e59);
+            color: white;
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 160ms ease, opacity 160ms ease;
+        }
+
+        .composer button:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        .composer button:disabled {
+            opacity: 0.7;
+            cursor: wait;
+        }
+
+        .composer-footer {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        @keyframes fade-up {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 860px) {
+            .app-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .main {
+                min-height: auto;
+            }
+
+            .composer form {
+                grid-template-columns: 1fr;
+            }
+
+            .composer button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div>
+                <div class="eyebrow">Interactive Demo</div>
+                <h1>Banking Chatbot</h1>
+            </div>
+            <p class="lead">
+                Ask for balances, filter transactions, or request monthly statements right in the browser.
+            </p>
+            <div class="prompt-list">
+                <div class="prompt-card" data-prompt="What is my balance?">
+                    <strong>Balance Check</strong>
+                    Ask for your current account balance.
+                </div>
+                <div class="prompt-card" data-prompt="Show my debit transactions in March above 1000">
+                    <strong>Filtered Transactions</strong>
+                    See debit transactions for March over a minimum amount.
+                </div>
+                <div class="prompt-card" data-prompt="Give me my March statement">
+                    <strong>Monthly Statement</strong>
+                    Generate a statement summary for a month.
+                </div>
+            </div>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="header-row">
+                    <div>
+                        <div class="eyebrow" style="color: var(--accent-strong);">FastAPI UI</div>
+                        <strong>Browser chat for your local banking backend</strong>
+                    </div>
+                    <div class="status" id="statusBadge">
+                        <span class="status-dot"></span>
+                        <span>Checking server...</span>
+                    </div>
+                </div>
+            </header>
+
+            <section class="conversation" id="conversation">
+                <div class="message system">
+                    <div class="meta">System</div>
+                    <div class="content">Try one of the example prompts or type your own banking question below.</div>
+                </div>
+            </section>
+
+            <section class="composer">
+                <form id="chatForm">
+                    <textarea id="messageInput" placeholder="Ask about your balance, March statement, or debit transactions..." required></textarea>
+                    <button type="submit" id="sendButton">Send Message</button>
+                </form>
+                <div class="composer-footer">
+                    <span>Examples: "What is my balance?" or "Show my debit transactions in March above 1000"</span>
+                    <span id="helperText">Waiting for your first message.</span>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const chatForm = document.getElementById("chatForm");
+        const messageInput = document.getElementById("messageInput");
+        const sendButton = document.getElementById("sendButton");
+        const conversation = document.getElementById("conversation");
+        const helperText = document.getElementById("helperText");
+        const statusBadge = document.getElementById("statusBadge");
+
+        function appendMessage(role, label, content, payload) {
+            const wrapper = document.createElement("article");
+            wrapper.className = `message ${role}`;
+
+            const meta = document.createElement("div");
+            meta.className = "meta";
+            meta.textContent = label;
+
+            const body = document.createElement("div");
+            body.className = "content";
+            body.textContent = content;
+
+            wrapper.append(meta, body);
+
+            if (payload) {
+                const dataCard = document.createElement("div");
+                dataCard.className = "data-card";
+                const pre = document.createElement("pre");
+                pre.textContent = JSON.stringify(payload, null, 2);
+                dataCard.appendChild(pre);
+                wrapper.appendChild(dataCard);
+            }
+
+            conversation.appendChild(wrapper);
+            conversation.scrollTop = conversation.scrollHeight;
+        }
+
+        function formatBotReply(data) {
+            const result = data.result || {};
+
+            if (!result.ok) {
+                return {
+                    text: result.response || "Something went wrong while handling that request.",
+                    payload: data
+                };
+            }
+
+            if (result.intent === "get_balance") {
+                return {
+                    text: `Your current balance is ${result.response}.`,
+                    payload: data
+                };
+            }
+
+            if (result.intent === "get_statement") {
+                return {
+                    text: result.response,
+                    payload: data
+                };
+            }
+
+            if (result.intent === "get_transactions") {
+                const count = result.count ?? 0;
+                const filters = Object.keys(result.filters || {}).length
+                    ? ` using filters ${JSON.stringify(result.filters)}`
+                    : "";
+                return {
+                    text: `Found ${count} transaction${count === 1 ? "" : "s"}${filters}.`,
+                    payload: result.response
+                };
+            }
+
+            return {
+                text: JSON.stringify(data, null, 2),
+                payload: data
+            };
+        }
+
+        async function checkHealth() {
+            try {
+                const response = await fetch("/health");
+                if (!response.ok) {
+                    throw new Error("Health check failed");
+                }
+                statusBadge.innerHTML = '<span class="status-dot"></span><span>Server connected</span>';
+            } catch (error) {
+                statusBadge.innerHTML = '<span class="status-dot" style="background:#b91c1c; box-shadow:0 0 0 6px rgba(185,28,28,0.12);"></span><span>Server unavailable</span>';
+            }
+        }
+
+        async function sendMessage(message) {
+            appendMessage("user", "You", message);
+            helperText.textContent = "Sending request...";
+            sendButton.disabled = true;
+
+            try {
+                const response = await fetch("/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Request failed with status ${response.status}`);
+                }
+
+                const data = await response.json();
+                const reply = formatBotReply(data);
+                appendMessage("bot", "Assistant", reply.text, reply.payload);
+                helperText.textContent = "Response received.";
+            } catch (error) {
+                appendMessage(
+                    "system",
+                    "Error",
+                    "The request could not be completed. Make sure the FastAPI server is running and try again."
+                );
+                helperText.textContent = error.message;
+            } finally {
+                sendButton.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        chatForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const message = messageInput.value.trim();
+            if (!message) {
+                return;
+            }
+            messageInput.value = "";
+            await sendMessage(message);
+        });
+
+        document.querySelectorAll(".prompt-card").forEach((card) => {
+            card.addEventListener("click", () => {
+                messageInput.value = card.dataset.prompt;
+                messageInput.focus();
+            });
+        });
+
+        checkHealth();
+    </script>
+</body>
+</html>

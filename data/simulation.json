@@ -1,0 +1,27 @@
+{
+  "user_id": "123",
+  "balance": 45230,
+  "transactions": [
+    {
+      "date": "2026-03-01",
+      "amount": -1200,
+      "type": "debit",
+      "category": "food",
+      "description": "Swiggy"
+    },
+    {
+      "date": "2026-03-02",
+      "amount": 50000,
+      "type": "credit",
+      "category": "salary",
+      "description": "Company"
+    },
+    {
+      "date": "2026-03-10",
+      "amount": -7000,
+      "type": "debit",
+      "category": "shopping",
+      "description": "Amazon"
+    }
+  ]
+}
