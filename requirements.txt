@@ -1,15 +1,15 @@
-fastapi
-uvicorn
-pydantic
+fastapi==0.115.0
+uvicorn==0.30.6
+pydantic==2.9.2
 
 # LLM + Agent
-langchain
-langgraph
-langchain-openai
-chromadb
+langchain==0.2.17
+langgraph==0.2.16
+langchain-openai==0.1.25
+chromadb==0.5.5
 
 # Embeddings
-sentence-transformers
+sentence-transformers==3.0.1
 
 # Optional (Groq / OpenRouter support)
-requests
+requests==2.32.3

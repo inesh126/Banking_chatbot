@@ -1,77 +1,59 @@
-import re
-from datetime import datetime
+from llm.client import call_llm_json, llm_is_configured
+from llm.prompt import EXTRACTION_SYSTEM_PROMPT, build_extraction_user_prompt
 
 
-MONTH_NAMES = {
-    "january": 1,
-    "february": 2,
-    "march": 3,
-    "april": 4,
-    "may": 5,
-    "june": 6,
-    "july": 7,
-    "august": 8,
-    "september": 9,
-    "october": 10,
-    "november": 11,
-    "december": 12,
-}
+def _sanitize_month(month):
+    if month is None:
+        return None
 
+    if isinstance(month, int) and 1 <= month <= 12:
+        return month
 
-def _extract_month(query: str):
-    for month_name, month_number in MONTH_NAMES.items():
-        if month_name in query:
-            return month_number
-
-    date_match = re.search(r"\b(20\d{2})-(\d{2})-\d{2}\b", query)
-    if date_match:
-        return int(date_match.group(2))
-
-    current_date = datetime.now()
-    if "this month" in query or "current month" in query:
-        return current_date.month
-    if "last month" in query:
-        return 12 if current_date.month == 1 else current_date.month - 1
+    if isinstance(month, str) and month.isdigit():
+        month = int(month)
+        if 1 <= month <= 12:
+            return month
 
     return None
 
 
-def _extract_transaction_type(query: str):
-    if any(keyword in query for keyword in ("debit", "spent", "spend", "withdraw", "expense")):
-        return "debit"
-    if any(keyword in query for keyword in ("credit", "credited", "received", "salary", "deposit")):
-        return "credit"
+def _sanitize_min_amount(min_amount):
+    if min_amount is None:
+        return None
+
+    if isinstance(min_amount, int) and min_amount >= 0:
+        return min_amount
+
+    if isinstance(min_amount, str) and min_amount.isdigit():
+        return int(min_amount)
+
     return None
 
 
-def _extract_min_amount(query: str):
-    amount_match = re.search(
-        r"(?:above|over|greater than|more than|at least|min(?:imum)? of)\s*(?:rs\.?|inr|rupees)?\s*(\d+)",
-        query,
-    )
-    if not amount_match:
-        amount_match = re.search(r"(?:rs\.?|inr|rupees)\s*(\d+)", query)
+def _sanitize_llm_result(parsed):
+    if not isinstance(parsed, dict):
+        return {"intent": "unknown"}
 
-    return int(amount_match.group(1)) if amount_match else None
-
-
-def parse_query(query: str):
-    normalized_query = query.lower().strip()
-    month = _extract_month(normalized_query)
-    txn_type = _extract_transaction_type(normalized_query)
-    min_amount = _extract_min_amount(normalized_query)
-
-    if "balance" in normalized_query:
+    intent = parsed.get("intent")
+    if intent == "get_balance":
         return {"intent": "get_balance"}
 
-    if "statement" in normalized_query:
-        return {"intent": "get_statement", "month": month}
+    if intent == "get_statement":
+        return {"intent": "get_statement", "month": _sanitize_month(parsed.get("month"))}
 
-    if any(keyword in normalized_query for keyword in ("transactions", "transaction", "spending", "spent", "history")):
+    if intent == "get_transactions":
+        raw_filters = parsed.get("filters", {})
+        if not isinstance(raw_filters, dict):
+            raw_filters = {}
+
         filters = {}
+        month = _sanitize_month(raw_filters.get("month"))
+        txn_type = raw_filters.get("txn_type")
+        min_amount = _sanitize_min_amount(raw_filters.get("min_amount"))
+
         if month is not None:
             filters["month"] = month
-        if txn_type is not None:
+        if txn_type in {"debit", "credit"}:
             filters["txn_type"] = txn_type
         if min_amount is not None:
             filters["min_amount"] = min_amount
@@ -79,3 +61,28 @@ def parse_query(query: str):
         return {"intent": "get_transactions", "filters": filters}
 
     return {"intent": "unknown"}
+
+
+def _history_to_text(history):
+    if not history:
+        return None
+
+    lines = []
+    for entry in history:
+        role = entry.get("role", "user")
+        label = "User" if role == "user" else "Assistant"
+        lines.append(f"{label}: {entry.get('content', '')}")
+    return "\n".join(lines)
+
+
+def _require_llm_parse_query(query: str, history=None):
+    if not llm_is_configured():
+        raise RuntimeError("LLM is not configured. Set LLM_API_KEY and LLM_MODEL.")
+
+    history_text = _history_to_text(history)
+    parsed = call_llm_json(EXTRACTION_SYSTEM_PROMPT, build_extraction_user_prompt(query, history_text))
+    return _sanitize_llm_result(parsed)
+
+
+def parse_query(query: str, history=None):
+    return _require_llm_parse_query(query, history)

@@ -1,6 +1,71 @@
 {
   "user_id": "123",
-  "balance": 45230,
+  "balance": 46300,
+  "account": {
+    "account_number": "9876543210",
+    "currency": "INR",
+    "account_type": "Savings"
+  },
+  "cards": [
+    {
+      "type": "debit",
+      "last_four": "3456",
+      "status": "active",
+      "monthly_limit": 25000
+    },
+    {
+      "type": "credit",
+      "last_four": "7890",
+      "status": "active",
+      "statement_due": "2026-05-05",
+      "minimum_due": 1200
+    }
+  ],
+  "beneficiaries": [
+    {
+      "name": "Ria Sharma",
+      "bank": "Axis Bank",
+      "account_number": "1122334455"
+    },
+    {
+      "name": "Nikhil Patel",
+      "bank": "HDFC Bank",
+      "account_number": "6677889900"
+    }
+  ],
+  "loans": [
+    {
+      "name": "Home Loan",
+      "outstanding_amount": 1250000,
+      "next_due_date": "2026-05-12",
+      "emi": 17000
+    }
+  ],
+  "deposits": [
+    {
+      "type": "fixed_deposit",
+      "amount": 100000,
+      "maturity_date": "2027-07-20",
+      "interest_rate": 6.7
+    }
+  ],
+  "profile": {
+    "kyc_status": "verified",
+    "branch": "MG Road Branch",
+    "atm_card_linked": true,
+    "phone_number": "+919876543210"
+  },
+  "support": [
+    {
+      "ticket_id": "SUP-2026-001",
+      "subject": "Unknown transaction",
+      "status": "open"
+    }
+  ],
+  "faq": {
+    "service_hours": "Mon-Fri 9:00 to 18:00",
+    "transfer_limit": 500000
+  },
   "transactions": [
     {
       "date": "2026-03-01",
@@ -14,7 +79,7 @@
       "amount": 50000,
       "type": "credit",
       "category": "salary",
-      "description": "Company"
+      "description": "Company Salary"
     },
     {
       "date": "2026-03-10",
@@ -22,6 +87,69 @@
       "type": "debit",
       "category": "shopping",
       "description": "Amazon"
+    },
+    {
+      "date": "2026-03-15",
+      "amount": -500,
+      "type": "debit",
+      "category": "entertainment",
+      "description": "Netflix"
+    },
+    {
+      "date": "2026-03-18",
+      "amount": -4200,
+      "type": "debit",
+      "category": "groceries",
+      "description": "Walmart"
+    },
+    {
+      "date": "2026-03-20",
+      "amount": 700,
+      "type": "credit",
+      "category": "refund",
+      "description": "App refund"
+    },
+    {
+      "date": "2026-04-05",
+      "amount": -15000,
+      "type": "debit",
+      "category": "housing",
+      "description": "Monthly rent"
+    },
+    {
+      "date": "2026-04-08",
+      "amount": -3200,
+      "type": "debit",
+      "category": "utilities",
+      "description": "Electricity bill"
+    },
+    {
+      "date": "2026-04-10",
+      "amount": -600,
+      "type": "debit",
+      "category": "food",
+      "description": "Starbucks"
+    },
+    {
+      "date": "2026-04-20",
+      "amount": -1800,
+      "type": "debit",
+      "category": "shopping",
+      "description": "PayPal purchase"
+    },
+    {
+      "date": "2026-04-25",
+      "amount": 12000,
+      "type": "credit",
+      "category": "income",
+      "description": "Freelance payment"
+    },
+    {
+      "date": "2026-04-28",
+      "amount": -900,
+      "type": "debit",
+      "category": "misc",
+      "description": "Unknown merchant"
     }
   ]
 }

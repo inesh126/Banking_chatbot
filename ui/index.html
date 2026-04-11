@@ -379,7 +379,7 @@
         const helperText = document.getElementById("helperText");
         const statusBadge = document.getElementById("statusBadge");
 
-        function appendMessage(role, label, content, payload) {
+        function appendMessage(role, label, content) {
             const wrapper = document.createElement("article");
             wrapper.className = `message ${role}`;
 
@@ -392,15 +392,6 @@
             body.textContent = content;
 
             wrapper.append(meta, body);
-
-            if (payload) {
-                const dataCard = document.createElement("div");
-                dataCard.className = "data-card";
-                const pre = document.createElement("pre");
-                pre.textContent = JSON.stringify(payload, null, 2);
-                dataCard.appendChild(pre);
-                wrapper.appendChild(dataCard);
-            }
 
             conversation.appendChild(wrapper);
             conversation.scrollTop = conversation.scrollHeight;
@@ -416,34 +407,8 @@
                 };
             }
 
-            if (result.intent === "get_balance") {
-                return {
-                    text: `Your current balance is ${result.response}.`,
-                    payload: data
-                };
-            }
-
-            if (result.intent === "get_statement") {
-                return {
-                    text: result.response,
-                    payload: data
-                };
-            }
-
-            if (result.intent === "get_transactions") {
-                const count = result.count ?? 0;
-                const filters = Object.keys(result.filters || {}).length
-                    ? ` using filters ${JSON.stringify(result.filters)}`
-                    : "";
-                return {
-                    text: `Found ${count} transaction${count === 1 ? "" : "s"}${filters}.`,
-                    payload: result.response
-                };
-            }
-
             return {
-                text: JSON.stringify(data, null, 2),
-                payload: data
+                text: result.response || "No response received."
             };
         }
 
@@ -479,7 +444,7 @@
 
                 const data = await response.json();
                 const reply = formatBotReply(data);
-                appendMessage("bot", "Assistant", reply.text, reply.payload);
+                appendMessage("bot", "Assistant", reply.text);
                 helperText.textContent = "Response received.";
             } catch (error) {
                 appendMessage(
@@ -515,3 +480,6 @@
     </script>
 </body>
 </html>
+
+
+
