@@ -6,7 +6,7 @@ from utils.data_loader import get_transactions
 
 @tool
 def statements_and_documents(query: str) -> str:
-    """Use for monthly statements, transaction ledgers, and document-style transaction exports."""
+    """Use for monthly statements, ledgers, and document-style transaction-history requests; input is a natural-language statement request and the tool returns statement period metadata and the transactions included in that statement."""
     try:
         month = detect_month(query)
         transactions = get_transactions(month=month)
@@ -19,6 +19,11 @@ def statements_and_documents(query: str) -> str:
                 "transactions": transactions,
             },
             metadata={"tool": "statements_and_documents", "query": query, "month": month},
+            message=(
+                "No transactions are available for the requested statement period."
+                if not transactions else
+                "Statement data retrieved from the demo dataset."
+            ),
         )
     except Exception as exc:
         return build_tool_error(

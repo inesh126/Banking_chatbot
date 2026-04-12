@@ -6,6 +6,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 SIMULATION_DATA_FILE = DATA_DIR / "simulation.json"
+KNOWLEDGE_BASE_FILE = DATA_DIR / "knowledge_base.json"
 ENV_FILE = BASE_DIR / ".env"
 LOCAL_SITE_PACKAGES = BASE_DIR / ".venv" / "Lib" / "site-packages"
 

@@ -20,11 +20,15 @@ except ImportError:
         return _SimpleTool(func)
 
 
-def build_tool_result(data, metadata=None):
+def build_tool_result(data, metadata=None, message=None):
+    payload = data if isinstance(data, dict) else {"value": data}
+    if message and "message" not in payload:
+        payload = {**payload, "message": message}
+
     return json.dumps(
         {
             "status": "success",
-            "data": data,
+            "data": payload,
             "metadata": metadata or {},
         },
         ensure_ascii=True,

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "faq_service_hours",
+    "topic": "faq",
+    "text": "Customer service hours for this demo bank are Monday to Friday from 9:00 to 18:00."
+  },
+  {
+    "id": "faq_transfer_limit",
+    "topic": "policy",
+    "text": "The demo bank transfer limit is 500000 INR. The chatbot may explain the limit, but payments and transfers are not supported in the demo."
+  },
+  {
+    "id": "statement_explanation",
+    "topic": "explanation",
+    "text": "A bank statement is a dated transaction list for a period. It is useful when the user asks for a monthly statement, ledger, or account activity summary."
+  },
+  {
+    "id": "spending_explanation",
+    "topic": "explanation",
+    "text": "Spending summaries focus on debit transactions. They are useful for questions about how much the user spent overall or within a category."
+  },
+  {
+    "id": "support_dispute_guidance",
+    "topic": "policy",
+    "text": "If a user reports an unknown transaction, the assistant should review support ticket data and explain what support status is available in the demo account."
+  },
+  {
+    "id": "cards_guidance",
+    "topic": "explanation",
+    "text": "Card questions often involve the card type, last four digits, status, monthly limit, statement due date, or minimum due."
+  },
+  {
+    "id": "loan_guidance",
+    "topic": "explanation",
+    "text": "Loan questions usually need outstanding amount, EMI amount, and next due date from the user account data."
+  },
+  {
+    "id": "deposit_guidance",
+    "topic": "explanation",
+    "text": "Fixed deposit questions usually need the deposit amount, maturity date, and interest rate."
+  }
+]

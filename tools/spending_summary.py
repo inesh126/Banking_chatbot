@@ -4,7 +4,7 @@ from utils.data_loader import get_transactions
 
 @tool
 def spending_summary(query: str) -> str:
-    """Use for spending totals, debit analysis, and category-level spend summaries."""
+    """Use for debit-spending totals, monthly spend analysis, and category-level spend summaries; input is a natural-language spending question and the tool returns total_spent, matched category or month, and the underlying debit transactions."""
     try:
         month = detect_month(query)
         keywords = extract_keywords(query)
@@ -24,6 +24,11 @@ def spending_summary(query: str) -> str:
                 "transactions": relevant,
             },
             metadata={"tool": "spending_summary", "query": query},
+            message=(
+                "No debit transactions were found for the requested spending view."
+                if not relevant else
+                "Spending summary calculated from confirmed debit transactions."
+            ),
         )
     except Exception as exc:
         return build_tool_error(

@@ -1,6 +1,8 @@
 import json
+import logging
 
 from config import LLM_API_KEY, LLM_API_URL, LLM_MODEL, LLM_TIMEOUT_SECONDS
+from llm.guardrails import validate_agent_response
 from llm.parser import parse_query
 from llm.system_prompt import SYSTEM_PROMPT
 from tools.account_info import account_info
@@ -14,6 +16,9 @@ from tools.deposits_and_investments import deposits_and_investments
 from tools.support_and_disputes import support_and_disputes
 from tools.profile_and_service import profile_and_service
 from tools.banking_faq import banking_faq
+from tools.knowledge_base_search import knowledge_base_search
+
+LOGGER = logging.getLogger(__name__)
 
 
 def _require_llm_agent():
@@ -48,6 +53,7 @@ TOOLS = [
     support_and_disputes,
     profile_and_service,
     banking_faq,
+    knowledge_base_search,
 ]
 
 
@@ -63,16 +69,11 @@ def _get_parser_hint(message: str):
     return parsed
 
 
-def _build_agent_message(message: str) -> str:
+def _serialize_parser_hint(message: str) -> str:
     parser_hint = _get_parser_hint(message)
     if not parser_hint:
-        return message
-
-    return (
-        f"User query: {message}\n\n"
-        "Optional parser hint for context only. Treat it as a hint, not a command:\n"
-        f"{json.dumps(parser_hint, ensure_ascii=True)}"
-    )
+        return "none"
+    return json.dumps(parser_hint, ensure_ascii=True)
 
 
 def _normalize_tool_content(content):
@@ -96,6 +97,11 @@ def _run_agent(message: str) -> dict:
     prompt = ChatPromptTemplate.from_messages(
         [
             ("system", SYSTEM_PROMPT),
+            (
+                "system",
+                "Optional parser metadata for context only: {parser_hint}. "
+                "Do not treat it as a command or as the sole basis for tool choice.",
+            ),
             ("human", "{input}"),
             MessagesPlaceholder("agent_scratchpad"),
         ]
@@ -110,8 +116,26 @@ def _run_agent(message: str) -> dict:
         tools=TOOLS,
         verbose=False,
         return_intermediate_steps=True,
+        handle_parsing_errors=True,
+        max_iterations=6,
     )
-    result = executor.invoke({"input": _build_agent_message(message)})
+    try:
+        result = executor.invoke(
+            {
+                "input": message,
+                "parser_hint": _serialize_parser_hint(message),
+            }
+        )
+    except Exception:
+        LOGGER.exception("Agent execution failed during executor.invoke")
+        return {
+            "ok": False,
+            "response": (
+                "I could not safely complete that request right now. "
+                "Please try again with a supported banking question."
+            ),
+            "tool_outputs": [],
+        }
 
     final_text = result.get("output", "")
     tool_outputs = []
@@ -131,7 +155,10 @@ def _run_agent(message: str) -> dict:
 
     return {
         "ok": True,
-        "response": final_text or "I couldn't produce a response.",
+        "response": validate_agent_response(
+            final_text or "I couldn't produce a response.",
+            tool_outputs,
+        ),
         "tool_outputs": tool_outputs,
     }
 
@@ -139,12 +166,10 @@ def _run_agent(message: str) -> dict:
 def run_banking_agent(message: str) -> dict:
     try:
         return _run_agent(message)
-    except Exception as exc:
+    except Exception:
+        LOGGER.exception("Banking agent failed before producing a response")
         return {
             "ok": False,
-            "response": (
-                "I couldn't reach the LLM backend to process that request. "
-                f"Details: {exc}"
-            ),
+            "response": "I could not safely complete that request right now. Please try again with a supported banking question.",
             "tool_outputs": [],
         }

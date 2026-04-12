@@ -4,7 +4,7 @@ from utils.data_loader import get_transactions
 
 @tool
 def transaction_search(query: str) -> str:
-    """Use for transaction lookups by month, merchant, category, type, amount, or general transaction history."""
+    """Use for user-specific transaction lookups by month, merchant, category, credit or debit type, or minimum amount; input is a natural-language transaction query and the tool returns matching transactions plus the detected filters."""
     try:
         month = detect_month(query)
         txn_type = detect_transaction_type(query)
@@ -33,6 +33,11 @@ def transaction_search(query: str) -> str:
                 },
             },
             metadata={"tool": "transaction_search", "query": query},
+            message=(
+                "No matching transactions were found in the demo dataset."
+                if not matches else
+                "Matching transactions retrieved from the demo dataset."
+            ),
         )
     except Exception as exc:
         return build_tool_error(
